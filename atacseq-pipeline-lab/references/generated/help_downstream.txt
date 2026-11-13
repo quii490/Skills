@@ -1,0 +1,50 @@
+ATAC-seq 自动化入口：自动扫描 FASTQ -> 生成 samplesheet/contrast -> 编辑后运行 pipeline
+
+常用：
+  1) 初始化模板：
+     bash run_auto_atacseq.sh --fastq-dir FASTQ_DIR --init-only
+
+  2) 模板编辑后直接运行：
+     bash run_auto_atacseq.sh --fastq-dir FASTQ_DIR --species hg38
+
+  3) 上游完成后只重跑下游：
+     bash run_auto_atacseq.sh --mode downstream --outdir RESULTS --species hg38 --levels both
+
+参数：
+  --mode STR               auto | init | upstream | downstream，默认 auto
+  --fastq-dir DIR
+  --species STR             hg38 | mm10 | mm39
+  --layout STR              auto | PE | SE，默认 auto
+  --outdir DIR              默认 /home/machicheng/lab-data/ATAC/<project>
+  --results-root DIR        默认 /home/machicheng/lab-data/ATAC
+  --work-dir DIR            默认 <outdir>/_automation/work
+  --samplesheet FILE        默认 <outdir>/_automation/inputs/samplesheet.csv
+  --contrast-file FILE      默认 <outdir>/_automation/inputs/contrasts.csv
+  --init-only               只生成模板，不启动流程
+  --background              后台运行
+  --resume / --no-resume
+  --queue-size INT
+  --max-cpus INT
+  --max-memory STR
+  --fastp-max-forks INT
+  --fastp-timeout STR
+  --metadata-csv FILE       可选，列包含 sample,condition,replicate；自动回填 samplesheet
+  --contrast CASE,CONTROL   可重复；直接写入 contrasts.csv，例如 --contrast KO,WT
+  --overwrite-inputs        重新生成 samplesheet/contrasts，覆盖旧模板
+  --preset STR              quick | standard | full，默认 standard
+  --run-tss-enrich BOOL        覆盖 preset：是否跑 TSS enrichment
+  --run-gene-body-profile BOOL 覆盖 preset：是否跑 gene body profile
+  --run-te-heatmap BOOL        覆盖 preset：是否跑 TE heatmap
+  --run-fixedbin BOOL          覆盖 preset：是否跑 fixed-bin
+  --run-motif BOOL             覆盖 preset：是否跑 HOMER motif
+  --run-footprinting BOOL      覆盖 preset：是否跑 footprinting
+  --run-nuc-phasing BOOL       覆盖 preset：是否跑 nucleosome phasing
+  --profile-preset STR      off | quick | standard | full；默认跟随主 preset
+  --profile-cores INT       profile heatmap 线程数，默认 8
+  --levels STR              downstream 模式：peak | bin | both，默认 both
+  --downstream-only         等价于 --mode downstream
+  --run-te-relaxed-tracks BOOL  是否额外生成 TE/L1 relaxed BAM+bigWig，默认 false
+  --te-mapq INT                 TE relaxed track 的 MAPQ，默认 0
+  --te-track-normalization STR  CPM | RPGC | RPKM | BPM，默认 CPM
+  --te-bw-binsize INT           TE relaxed bigWig bin size，默认 10
+  --extra "ARGS"

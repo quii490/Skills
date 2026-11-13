@@ -1,0 +1,146 @@
+{
+  "pipeline": "cutrun",
+  "code_var": "LAB_CODE_CUT",
+  "files": [
+    "pipelines/chipseq_auto_nf/run_auto_chipseq.sh",
+    "pipelines/chipseq_auto_nf/run_pipeline.sh",
+    "pipelines/chipseq_auto_nf/run_downstream.sh",
+    "pipelines/chipseq_auto_nf/main.nf"
+  ],
+  "entrypoints": {
+    "run": "bash pipelines/chipseq_auto_nf/run_auto_chipseq.sh",
+    "downstream": "bash pipelines/chipseq_auto_nf/run_downstream.sh"
+  },
+  "roles": {
+    "fastq": [
+      "--fastq-dir",
+      "--input-dir",
+      "--fastq"
+    ],
+    "outdir": [
+      "--outdir",
+      "--output-dir",
+      "--results-dir"
+    ],
+    "results": [
+      "--results-dir",
+      "--outdir",
+      "--output-dir"
+    ],
+    "species": [
+      "--species",
+      "--genome"
+    ],
+    "assay": [
+      "--assay"
+    ],
+    "profile": [
+      "--profile"
+    ],
+    "threads": [
+      "--threads"
+    ],
+    "peak_jobs": [
+      "--peak-jobs"
+    ],
+    "tier": [
+      "--resource-tier"
+    ],
+    "max_cpus": [
+      "--max-cpus",
+      "--cpus"
+    ],
+    "max_mem": [
+      "--max-memory",
+      "--memory"
+    ],
+    "init": [
+      "--init-only",
+      "--init"
+    ],
+    "preview": [
+      "--preview"
+    ],
+    "resume": [
+      "--resume"
+    ],
+    "background": [
+      "--background"
+    ],
+    "skip_preflight": [
+      "--skip-preflight"
+    ],
+    "reference_bundle": [
+      "--reference-bundle"
+    ]
+  },
+  "booleans": [
+    "init",
+    "preview",
+    "resume",
+    "background",
+    "skip_preflight"
+  ],
+  "actions": {
+    "init": {
+      "entry": "run",
+      "required": [
+        "fastq",
+        "outdir",
+        "species",
+        "assay"
+      ],
+      "optional": [
+        "init"
+      ],
+      "force": [
+        "init"
+      ]
+    },
+    "preview": {
+      "entry": "run",
+      "required": [
+        "fastq",
+        "outdir",
+        "species",
+        "assay"
+      ],
+      "optional": [
+        "preview"
+      ],
+      "force": [
+        "preview"
+      ]
+    },
+    "run": {
+      "entry": "run",
+      "required": [
+        "fastq",
+        "outdir",
+        "species",
+        "assay"
+      ],
+      "optional": [
+        "profile",
+        "resume",
+        "background",
+        "max_cpus",
+        "max_mem",
+        "reference_bundle"
+      ]
+    },
+    "downstream": {
+      "entry": "downstream",
+      "required": [
+        "results",
+        "species"
+      ],
+      "optional": [
+        "threads",
+        "peak_jobs",
+        "tier",
+        "resume"
+      ]
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "pipeline": "atac",
+  "code_var": "LAB_CODE_ATAC",
+  "files": [
+    "run_auto_atacseq.sh",
+    "run_pipeline.sh",
+    "main.nf",
+    "nextflow.config",
+    "atacseq-downstream/run_downstream_atac.R"
+  ],
+  "entrypoints": {
+    "run": "bash run_auto_atacseq.sh",
+    "downstream": "bash run_auto_atacseq.sh --mode downstream"
+  },
+  "roles": {
+    "fastq": [
+      "--fastq-dir",
+      "--input-dir",
+      "--fastq"
+    ],
+    "outdir": [
+      "--outdir",
+      "--output-dir",
+      "--results-dir"
+    ],
+    "species": [
+      "--species",
+      "--genome"
+    ],
+    "preset": [
+      "--preset"
+    ],
+    "levels": [
+      "--levels"
+    ],
+    "max_cpus": [
+      "--max-cpus",
+      "--cpus"
+    ],
+    "max_mem": [
+      "--max-memory",
+      "--memory"
+    ],
+    "init": [
+      "--init-only",
+      "--init"
+    ],
+    "resume": [
+      "--resume"
+    ],
+    "background": [
+      "--background"
+    ]
+  },
+  "booleans": [
+    "init",
+    "resume",
+    "background"
+  ],
+  "actions": {
+    "init": {
+      "entry": "run",
+      "required": [
+        "fastq",
+        "outdir",
+        "species"
+      ],
+      "optional": [
+        "init"
+      ],
+      "force": [
+        "init"
+      ]
+    },
+    "run": {
+      "entry": "run",
+      "required": [
+        "fastq",
+        "outdir",
+        "species"
+      ],
+      "optional": [
+        "preset",
+        "resume",
+        "background",
+        "max_cpus",
+        "max_mem"
+      ]
+    },
+    "downstream": {
+      "entry": "downstream",
+      "required": [
+        "outdir",
+        "species"
+      ],
+      "optional": [
+        "levels"
+      ]
+    }
+  }
+}

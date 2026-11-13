@@ -1,0 +1,77 @@
+===== run =====
+ChIP-seq / CUT&RUN / CUT&Tag 自动入口：只指定 FASTQ 目录，自动生成 manifest 并运行 Nextflow。
+
+常用：
+  run_auto_chipseq --fastq-dir FASTQ_DIR --species hg38 --outdir results
+  run_auto_chipseq --fastq-dir FASTQ_DIR --outdir results --init-only
+  run_auto_chipseq --fastq-dir FASTQ_DIR --outdir results --preview
+
+参数：
+  --fastq-dir DIR              FASTQ 所在目录，递归扫描
+  --species STR                hg38 | mm39，默认 hg38
+  --resource-tier STR          downstream resources: small | standard | full
+  --assay STR                  chipseq | cutrun | cuttag，默认 cutrun
+  --layout STR                 auto | PE | SE，默认 auto
+  --outdir DIR                 默认 <fastq-dir同级>/chipseq_auto_results
+  --work-dir DIR               默认 <outdir>/_automation/work
+  --manifest FILE              默认 <outdir>/_automation/inputs/manifest.csv
+  --control-sample NAME        手动指定 IgG/Input/control 样本
+  --control-regex REGEX        自动识别 control 的正则
+  --no-auto-control            不自动给 target 样本填 igg 列
+  --force-manifest             覆盖重建 manifest
+  --init-only                  只生成 manifest，不启动流程
+  --background                 后台运行
+  --resume / --no-resume
+  --preview                    nextflow -preview，不真正运行 jobs
+  --dry-run                    只打印命令
+  --skip-preflight             跳过 manifest/FASTQ/参考/磁盘检查（不建议）
+  --profile STR                Nextflow profile，默认 conda
+  --trim BOOL                  默认 true
+  --run-analysis BOOL          默认 true
+  --enable-te BOOL             默认 true；false 关闭整个 TE 分支
+  --make-rpgc-track BOOL       默认 true
+  --make-te-tracks BOOL        默认 true；为 TE/L1 relaxed BAM 生成 bigWig
+  --make-te-locus-best-track BOOL
+                               默认 true；生成可复现的单一最佳位置 5 bp CPM 轨道
+  --te-k INT                   TE multi-mapping 数，默认 25
+  --te-duplicate-policy STR    mark | keep | remove，默认 mark
+  --te-count-ignore-duplicates BOOL
+                               featureCounts --ignoreDup 敏感性分析（默认 false）
+  --gene-count-ignore-duplicates BOOL
+                               gene featureCounts --ignoreDup 敏感性分析（默认 false）
+  --te-remove-blacklist BOOL   默认 false
+  --standard-duplicate-policy STR
+                               标准 BAM 重复 reads：mark | keep | remove（默认 remove）
+  --allow-no-control BOOL      明确允许无对照的探索性 MACS3（默认 false）
+  --run-downstream             主流程完成后运行下游工具
+  --te-methods LIST            可选 TE 适配器：t3e,allo,repentools
+  --te-methods-execute         执行已安装的外部 TE 工具
+  --te-repeat-bed FILE         T3E/Allo 使用的 RepeatMasker BED
+  --te-saf FILE                TE SAF，用于自动生成 RepeatMasker BED
+  --te-anno FILE               TE annotation TSV，用于自动生成 RepeatMasker BED
+  --t3e-dir DIR                T3E 仓库目录
+  --t3e-python FILE            T3E 隔离环境 Python
+  --t3e-max-bed-reads INT      T3E BED 行数上限（默认 0；保留完整 read groups）
+  --t3e-iterations INT         T3E 迭代次数（默认 100）
+  --allo-command CMD           Allo 命令模板
+  --repentools-command CMD     RepEnTools 命令模板
+  --repentools-index-dir DIR   CHM13 index directory for FASTQ adapter
+  --repentools-gtf FILE        RepeatMasker GTF for FASTQ adapter
+  --repentools-ret FILE        RepEnTools ret executable
+  --repentools-target-groups SPEC  group=chip1,chip2;... mapping
+  --repentools-input-samples SPEC  input1,input2 mapping
+  --macs-qvalue FLOAT           MACS -q cutoff；数值越小越严格
+  --macs-pvalue FLOAT           MACS -p cutoff；设置后用 p-value 而不是 q-value
+  --macs-broad-cutoff FLOAT     MACS --broad-cutoff；数值越小越严格
+  --extra "ARGS"               继续传给 run_pipeline/Nextflow
+  --reference-bundle FILE      固定版本 reference_bundle.json
+  --spikein-mode MODE          off | audit | relative，默认 off
+  --fastq-check-limit INT      FASTQ mate 抽查条数，0=逐条全查（默认 10000）
+  --spike-min-mapq INT / --spike-duplicate-policy keep|remove
+  --spike-calibration-unit spike_relative|per_cell
+  --spike-allow-unverified BOOL / --spike-max-count-rse FLOAT
+
+===== downstream =====
+Usage: run_downstream.sh --results-dir DIR [--species hg38|mm39] [--threads N] [--peak-jobs N] [--resource-tier small|standard|full] [--resume|--no-resume] [--te-methods LIST] [--repentools-ret FILE]
+Peak annotation: ChIPseeker by default; set PEAK_ANNOTATOR=chippeakanno for legacy ChIPpeakAnno
+

@@ -1,0 +1,129 @@
+统一 RNA-seq 自动化入口（manifest 下载 / 直接 FASTQ / 仅重跑下游绘图）
+
+两步常用模式：
+  1) fastq-dir / manifest -> 自动识别与上游分析 -> 生成 results-dir 下的 condition.csv / contrast.csv 模板
+  2) 手动修改 condition.csv / contrast.csv 后，再用 --downstream 只跑下游差异分析与出图
+
+输入模式（至少满足一种）：
+  --manifest FILE           manifest 表；支持本地 fastq、fastq URL、SRR/ERR/DRR、部分 GSM
+  --fastq-dir DIR           已有 FASTQ 根目录
+  --downstream              仅重跑下游，默认读取 results-dir 下的 condition.csv / contrast.csv
+  --downstream-only         同 --downstream
+
+设计输入：
+  --sample-metadata FILE    可选，CSV 至少包含 sample,condition,replicate
+  --sample-meta STR         命令行逐样本指定；格式 sample:condition:replicate；可重复
+  --condition-map STR       命令行逐组指定；格式 condition:sample1,sample2,...；replicate 自动按顺序 1..N
+  --contrast-file FILE      CSV，列名: case,control（兼容旧格式 group_col,case,control）
+  --contrast STR            命令行指定 contrast；推荐格式 CASE:CONTROL；兼容旧格式 group_col:CASE:CONTROL；可重复
+
+路径：
+  --work-root DIR           工作根目录；默认 <fastq-dir同级>/rnaseq_auto_run 或 <manifest同级>/rnaseq_auto_run
+  --results-dir DIR         上游结果目录；默认 <fastq-dir同级>/rnaseq_results 或 <manifest同级>/rnaseq_results
+  --plots-dir DIR           下游绘图输出目录；默认 <results-dir>/plots
+                            （兼容别名：--plot-outdir / --plot-dir）
+  --download-dir DIR        manifest 下载出的 FASTQ 目录；默认 <work-root>/fastq
+
+核心参数：
+  --species STR             hg38 | mm10 | mm39
+  --human-ref STR           hg38 | t2t，默认 hg38；仅 species=hg38 时生效
+  --aligner STR             star | hisat2，默认 star（基因比对）
+  --strand STR              unstranded | forward | reverse，默认 unstranded；同时用于 gene 和 TE
+  --strandedness STR        兼容旧参数，同 --strand
+  --layout STR              auto | PE | SE，默认 auto
+  --r1-pattern STR          默认 _R1
+  --r2-pattern STR          默认 _R2
+  --tecount-strand STR      兼容旧参数，同 --strand；不建议再单独使用
+  --sra-threads INT         manifest 中跑 fasterq-dump 的线程数，默认 8
+
+运行控制：
+  --background              后台运行整个自动化流程
+  --stop                    停止 results-dir 对应的正在运行任务，并记录 STOPPED 状态；不启动新分析
+  --resume                  上游启用 -resume（默认）
+  --no-resume               上游禁用 -resume
+  --resume-session ID       恢复指定 Nextflow session（高级选项）
+  --upstream-only           仅跑上游（默认行为）
+  --align-only              仅做 FastP/FastQC、基因 STAR/HISAT2 比对和 BAM/QC；跳过 counts、TE 和下游
+  --downstream              仅跑下游
+  --downstream-only         同 --downstream
+  --profile NAME            Nextflow profile
+  --queue-size INT          Nextflow queue_size；默认 16
+  --max-cpus INT            最大 CPU
+  --max-memory STR          最大内存，例如 "300 GB"
+  --tequant-max-forks INT   TEtranscripts 样本并发；默认 6
+  --tequant-mem STR         每个 TEcount 任务内存；默认 16 GB
+  --tequant-index-mem STR   一次性 TEtranscripts 索引构建内存；默认 24 GB
+  --telescope-max-forks INT Telescope assignment 并发；默认 4
+  --telescope-mem STR       每个 Telescope assignment 任务内存；默认 24 GB
+  --telescope-collate-cpus INT
+                            Telescope BAM 整理任务 CPU；默认 4
+  --telescope-collate-mem STR
+                            每个 BAM 整理任务内存；默认 16 GB
+  --telescope-collate-max-forks INT
+                            同时整理的 BAM 数；默认 2
+  --progress-interval INT   进度文件刷新间隔（秒），默认 30
+  --dry-run                只预检输入、参数和计划模块，不提交分析任务
+  --failure-policy STR     core|strict，默认 core；可选模块失败不阻断核心结果
+
+上游开关：
+  --run-fastp BOOL
+  --run-gene-count-branch BOOL
+  --run-featurecounts BOOL  true|false；设为 false 可保留基因 BAM 但跳过 featureCounts
+  --run-salmon BOOL
+  --run-stringtie BOOL      默认 false
+  --run-tecount BOOL        默认 false
+  --run-telocal BOOL        默认 false；需要时显式开启
+  --run-tetranscripts BOOL
+  --run-dedup BOOL         默认 false；高级选项：用 dedup BAM 做 counts，普通 RNA-seq 不推荐
+  --run-markdup-qc BOOL    默认 true；只输出 Picard duplicate metrics，不改变 counts
+  --run-rediscoverte BOOL    true|false|auto，默认 auto；hg38 跑，鼠跳过
+  --run-rediscoverte-rollup BOOL
+                            是否调用 REdiscoverTE rollup，默认 true；用于默认生成分层 TE 可视化
+  --run-salmonte BOOL       默认 false；实验性兼容模块
+  --run-multiqc BOOL       默认 true；汇总 FastQC、比对、计数和 Picard QC
+  --multiqc-cmd PATH       MultiQC 可执行文件；默认使用 config 中的 multiqc_cmd
+  --run-telescope BOOL    默认 true；基于贝叶斯EM模型重分配multi-mapped TE reads
+  --run-fastqc BOOL       默认 true；对原始 FASTQ 运行 FastQC（fastp 同时提供 clean FASTQ QC）
+  --run-rnaseq-metrics BOOL  默认 true；Picard RNA-seq 区域分布和偏倚指标
+  --ref-flat FILE         可选；不提供时自动由基因 GTF 生成
+  --refFlat FILE          --ref-flat 的兼容别名
+  --ribosomal-intervals FILE
+                          可选 Picard rRNA interval list
+
+下游绘图参数：
+  --padj-cutoff NUM         默认 0.05
+  --lfc-cutoff NUM          默认 0.58
+  --baseMean-min NUM        默认 5
+  --label-top-n NUM         默认 40
+  --heatmap-top-n NUM       默认 40
+  --volcano-orientation STR classic|horizontal，默认 classic
+  --gray-nonsig BOOL        非显著点是否统一灰色，默认 true
+  --exploratory-method STR  无重复差异算法：logCPM_diff|edgeR_fixedBCV，默认 logCPM_diff
+  --exploratory-fixed-bcv NUM
+                            edgeR_fixedBCV 的 BCV；human/TE 可用 0.4，默认 0.4
+  --plot-threads NUM        下游 contrast/panel 并行数；显式设置时不做人为 8 线程上限
+  --msigdb-cache-dir DIR    高级覆盖：msigdbr 本地 RDS 缓存目录；默认取 conf/paths.env 的 MSIGDB_CACHE_DIR，日常无需填写
+  --msigdb-allow-download BOOL
+                            高级选项：本地缓存缺失时是否联网下载；默认 false，建议保持关闭
+  --gsea-plot-top-n NUM    每个 GSEA 类别的 running-score 图数量；默认 4，设为 0 关闭
+  --lfc-shrink BOOL        是否额外计算 apeglm 收缩 lfc（默认 false；开启时写入 *_shrunk 列，不改动 log2FoldChange）
+  --no-resume-modules      下游强制全部重算：不使用断点续跑（等价 --resume-modules false）
+  --resume-modules BOOL    下游断点续跑：true|false；默认 auto（同目录存在成功的上次运行且签名一致时沿用，跳过已成功模块）
+                           注意：与上游 nextflow 的 --resume / --no-resume 无关，后者控制比对等上游步骤
+  --only-tools STR          仅运行指定下游模块，逗号分隔；例如 TE_TEtranscripts
+  --skip-tools STR          跳过指定下游模块，逗号分隔；例如 TE_TElocal,TE_TEcount
+  --partial-input-policy STR  skip|error|allow，默认 skip；缺样本时默认整模块跳过
+  --allow-partial-inputs BOOL  旧兼容参数；true 等价于 policy=allow
+
+其它：
+  --default-condition STR   没有命中 metadata 时的默认 condition，默认 NA
+  --default-replicate STR   没有命中 metadata 时的默认 replicate，默认 NA
+  --replace-design          允许覆盖 condition.csv/contrast.csv；覆盖前自动备份
+  --rnaseq-env DIR          上游 conda 环境路径
+  --downstream-env DIR      下游 conda 环境路径
+  --rediscoverte-rollup-conda-prefix DIR
+                            REdiscoverTE rollup 使用的现有环境；默认跟随 --downstream-env
+  --picard-markdup-java-heap STR
+                            MarkDuplicates JVM heap；默认 16g（任务内存默认 24 GB）
+  --extra "ARGS"           追加到 nextflow run 的原始参数
+  -h, --help                显示帮助

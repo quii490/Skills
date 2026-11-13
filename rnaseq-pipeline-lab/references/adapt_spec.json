@@ -1,0 +1,119 @@
+{
+  "pipeline": "rnaseq",
+  "code_var": "LAB_CODE_RNA",
+  "files": [
+    "rnaseq/run_auto_rnaseq.sh",
+    "rnaseq/main.nf",
+    "rnaseq/nextflow.config",
+    "rnaseq-downstream/run_downstream.R"
+  ],
+  "entrypoints": {
+    "run": "bash rnaseq/run_auto_rnaseq.sh",
+    "downstream": "bash rnaseq/run_auto_rnaseq.sh --downstream"
+  },
+  "roles": {
+    "fastq": [
+      "--fastq-dir",
+      "--input-dir",
+      "--fastq"
+    ],
+    "results": [
+      "--results-dir",
+      "--outdir",
+      "--output-dir"
+    ],
+    "work": [
+      "--work-root",
+      "--work-dir"
+    ],
+    "species": [
+      "--species",
+      "--genome"
+    ],
+    "strand": [
+      "--strand"
+    ],
+    "layout": [
+      "--layout"
+    ],
+    "plots": [
+      "--plots-dir",
+      "--plot-dir"
+    ],
+    "padj": [
+      "--padj-cutoff"
+    ],
+    "lfc": [
+      "--lfc-cutoff"
+    ],
+    "basemean": [
+      "--baseMean-min",
+      "--basemean-min"
+    ],
+    "heatmap": [
+      "--heatmap-top-n"
+    ],
+    "max_cpus": [
+      "--max-cpus",
+      "--cpus"
+    ],
+    "max_mem": [
+      "--max-memory",
+      "--memory"
+    ],
+    "resume": [
+      "--resume"
+    ],
+    "background": [
+      "--background"
+    ],
+    "dry_run": [
+      "--dry-run"
+    ],
+    "no_resume_modules": [
+      "--no-resume-modules"
+    ]
+  },
+  "booleans": [
+    "resume",
+    "background",
+    "dry_run",
+    "no_resume_modules"
+  ],
+  "actions": {
+    "run": {
+      "entry": "run",
+      "required": [
+        "fastq",
+        "results",
+        "species"
+      ],
+      "optional": [
+        "work",
+        "strand",
+        "layout",
+        "resume",
+        "background",
+        "dry_run",
+        "max_cpus",
+        "max_mem"
+      ]
+    },
+    "downstream": {
+      "entry": "downstream",
+      "required": [
+        "results",
+        "species"
+      ],
+      "optional": [
+        "plots",
+        "strand",
+        "padj",
+        "lfc",
+        "basemean",
+        "heatmap",
+        "no_resume_modules"
+      ]
+    }
+  }
+}

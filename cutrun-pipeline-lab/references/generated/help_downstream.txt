@@ -1,0 +1,2 @@
+Usage: run_downstream.sh --results-dir DIR [--species hg38|mm39] [--threads N] [--peak-jobs N] [--resource-tier small|standard|full] [--resume|--no-resume] [--te-methods LIST] [--repentools-ret FILE]
+Peak annotation: ChIPseeker by default; set PEAK_ANNOTATOR=chippeakanno for legacy ChIPpeakAnno

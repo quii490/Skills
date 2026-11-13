@@ -1,0 +1,44 @@
+replicaCount: 1
+
+image:
+  repository: base.med.thu/public/jupyter-gpu
+  pullPolicy: Always
+  tag: "v1"
+
+# 每个 release/任务唯一；同名会撞 Secret/Service/Ingress
+containerName: "__LAB_CONTAINER_NAME__"
+
+# low = 中级 GPU，high = 高级 GPU；纯 CPU 任务注释掉此行
+gputype: "low"
+
+service:
+  type: ClusterIP
+  port: 8888
+
+resources:
+  cpu: "24"
+  memory: "128"
+  gpu: "1"
+
+# 使用你自己的 Harbor 账号；密码运行时从 ~/.config/med-lab/registry.env 注入
+imageCredentials:
+  registry: base.med.thu
+  username: "__LAB_REGISTRY_USER__"
+  password: "__LAB_REGISTRY_PASSWORD__"
+
+# 只挂载你自己的 home + 公共只读输入；不要挂别人的 home
+loadDataPath:
+  public:
+    - "input"
+  personal:
+    - "__LAB_USER__"
+
+nfs: "Taurus"
+
+transfer: false
+
+mode: "job"
+job:
+  # 改成你的真实命令；脚本以 imageCredentials.username（应等于你的集群账号）运行
+  script: "cd /home/__LAB_USER__ && echo 'replace job.script' && sleep 30"
+  jobLogPath: "/home/__LAB_USER__/joblog"
