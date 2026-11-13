@@ -6,7 +6,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/lab_config.sh" || exit 1
 ENV_FILE="${LAB_REGISTRY_ENV:-$HOME/.config/med-lab/registry.env}"
 fail=0
-file_mode() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+file_mode() { if stat -c '%a' "$1" >/dev/null 2>&1; then stat -c '%a' "$1"; else stat -f '%Lp' "$1"; fi; }
 ok()   { echo "[PASS] $*"; }
 bad()  { echo "[FAIL] $*"; fail=1; }
 warn() { echo "[WARN] $*"; }

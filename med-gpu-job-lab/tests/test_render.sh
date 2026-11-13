@@ -4,7 +4,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 COMMON="$(cd "$ROOT/.." && pwd)/common"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-file_mode() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+file_mode() { if stat -c '%a' "$1" >/dev/null 2>&1; then stat -c '%a' "$1"; else stat -f '%Lp' "$1"; fi; }
 mkdir -p "$TMP/skill/scripts" "$TMP/skill/assets"
 cp "$ROOT/scripts/render_values.sh" "$TMP/skill/scripts/"
 cp "$COMMON/lab_config.sh" "$TMP/skill/scripts/"
@@ -19,7 +19,7 @@ LAB_SCRATCH=/tmp/tester
 EOF
 cat > "$TMP/registry.env" <<'EOF'
 LAB_REGISTRY_USER=tester
-LAB_REGISTRY_PASSWORD='dummy-secret'
+LAB_REGISTRY_PASSWORD='p@ss"word'
 EOF
 chmod 600 "$TMP/registry.env"
 out="$(LAB_CONFIG="$TMP/lab.env" bash "$TMP/skill/scripts/render_values.sh" \

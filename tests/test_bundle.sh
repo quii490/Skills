@@ -5,7 +5,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 fail=0
-file_mode() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+file_mode() { if stat -c '%a' "$1" >/dev/null 2>&1; then stat -c '%a' "$1"; else stat -f '%Lp' "$1"; fi; }
 check() { if ! printf '%s\n' "$3" | grep -q "$2"; then echo "FAIL $1"; fail=1; else echo "ok   $1"; fi; }
 
 out="$(HOME="$TMP/home" bash "$ROOT/install.sh" --cluster-user tester --target "$TMP/skills" --force 2>&1)"; rc=$?
